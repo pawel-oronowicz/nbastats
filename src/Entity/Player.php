@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\PlayerRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -17,9 +19,6 @@ class Player
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
-    #[ORM\Column]
-    private ?int $teamId = null;
-
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $position = null;
 
@@ -28,9 +27,6 @@ class Player
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $birthDate = null;
-
-    #[ORM\Column]
-    private ?int $countryId = null;
 
     #[ORM\Column(length: 4, nullable: true)]
     private ?string $draftYear = null;
@@ -43,6 +39,28 @@ class Player
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $college = null;
+
+    #[ORM\ManyToOne(inversedBy: 'players')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Team $Team = null;
+
+    #[ORM\ManyToOne(inversedBy: 'players')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Country $Country = null;
+
+    /**
+     * @var Collection<int, PlayerBoxScore>
+     */
+    #[ORM\ManyToMany(targetEntity: PlayerBoxScore::class, mappedBy: 'Player')]
+    private Collection $playerBoxScores;
+
+    #[ORM\Column]
+    private ?int $sourceId = null;
+
+    public function __construct()
+    {
+        $this->playerBoxScores = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -57,18 +75,6 @@ class Player
     public function setName(string $name): static
     {
         $this->name = $name;
-
-        return $this;
-    }
-
-    public function getTeamId(): ?int
-    {
-        return $this->teamId;
-    }
-
-    public function setTeamId(int $teamId): static
-    {
-        $this->teamId = $teamId;
 
         return $this;
     }
@@ -105,18 +111,6 @@ class Player
     public function setBirthDate(?\DateTimeInterface $birthDate): static
     {
         $this->birthDate = $birthDate;
-
-        return $this;
-    }
-
-    public function getCountryId(): ?int
-    {
-        return $this->countryId;
-    }
-
-    public function setCountryId(int $countryId): static
-    {
-        $this->countryId = $countryId;
 
         return $this;
     }
@@ -165,6 +159,69 @@ class Player
     public function setCollege(?string $college): static
     {
         $this->college = $college;
+
+        return $this;
+    }
+
+    public function getTeam(): ?Team
+    {
+        return $this->Team;
+    }
+
+    public function setTeam(?Team $Team): static
+    {
+        $this->Team = $Team;
+
+        return $this;
+    }
+
+    public function getCountry(): ?Country
+    {
+        return $this->Country;
+    }
+
+    public function setCountry(?Country $Country): static
+    {
+        $this->Country = $Country;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PlayerBoxScore>
+     */
+    public function getPlayerBoxScores(): Collection
+    {
+        return $this->playerBoxScores;
+    }
+
+    public function addPlayerBoxScore(PlayerBoxScore $playerBoxScore): static
+    {
+        if (!$this->playerBoxScores->contains($playerBoxScore)) {
+            $this->playerBoxScores->add($playerBoxScore);
+            $playerBoxScore->addPlayer($this);
+        }
+
+        return $this;
+    }
+
+    public function removePlayerBoxScore(PlayerBoxScore $playerBoxScore): static
+    {
+        if ($this->playerBoxScores->removeElement($playerBoxScore)) {
+            $playerBoxScore->removePlayer($this);
+        }
+
+        return $this;
+    }
+
+    public function getSourceId(): ?int
+    {
+        return $this->sourceId;
+    }
+
+    public function setSourceId(int $sourceId): static
+    {
+        $this->sourceId = $sourceId;
 
         return $this;
     }

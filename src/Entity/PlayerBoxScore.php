@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\PlayerBoxScoreRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PlayerBoxScoreRepository::class)]
@@ -12,12 +14,6 @@ class PlayerBoxScore
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
-
-    #[ORM\Column]
-    private ?int $gameId = null;
-
-    #[ORM\Column]
-    private ?int $playerId = null;
 
     #[ORM\Column]
     private ?int $minutes = null;
@@ -64,33 +60,27 @@ class PlayerBoxScore
     #[ORM\Column]
     private ?int $fouls = null;
 
+    /**
+     * @var Collection<int, Game>
+     */
+    #[ORM\ManyToMany(targetEntity: Game::class, inversedBy: 'playerBoxScores')]
+    private Collection $Game;
+
+    /**
+     * @var Collection<int, Player>
+     */
+    #[ORM\ManyToMany(targetEntity: Player::class, inversedBy: 'playerBoxScores')]
+    private Collection $Player;
+
+    public function __construct()
+    {
+        $this->Game = new ArrayCollection();
+        $this->Player = new ArrayCollection();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getGameId(): ?int
-    {
-        return $this->gameId;
-    }
-
-    public function setGameId(int $gameId): static
-    {
-        $this->gameId = $gameId;
-
-        return $this;
-    }
-
-    public function getPlayerId(): ?int
-    {
-        return $this->playerId;
-    }
-
-    public function setPlayerId(int $playerId): static
-    {
-        $this->playerId = $playerId;
-
-        return $this;
     }
 
     public function getMinutes(): ?int
@@ -269,6 +259,54 @@ class PlayerBoxScore
     public function setFouls(int $fouls): static
     {
         $this->fouls = $fouls;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Game>
+     */
+    public function getGame(): Collection
+    {
+        return $this->Game;
+    }
+
+    public function addGame(Game $game): static
+    {
+        if (!$this->Game->contains($game)) {
+            $this->Game->add($game);
+        }
+
+        return $this;
+    }
+
+    public function removeGame(Game $game): static
+    {
+        $this->Game->removeElement($game);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Player>
+     */
+    public function getPlayer(): Collection
+    {
+        return $this->Player;
+    }
+
+    public function addPlayer(Player $player): static
+    {
+        if (!$this->Player->contains($player)) {
+            $this->Player->add($player);
+        }
+
+        return $this;
+    }
+
+    public function removePlayer(Player $player): static
+    {
+        $this->Player->removeElement($player);
 
         return $this;
     }

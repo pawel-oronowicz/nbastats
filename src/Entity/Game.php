@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\GameRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -14,33 +16,38 @@ class Game
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column]
-    private ?int $seasonId = null;
-
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $date = null;
 
-    #[ORM\Column]
-    private ?int $homeTeamId = null;
+    #[ORM\ManyToOne(inversedBy: 'games')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Team $HomeTeam = null;
 
-    #[ORM\Column]
-    private ?int $awayTeamId = null;
+    #[ORM\ManyToOne(inversedBy: 'games')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Team $AwayTeam = null;
+
+    #[ORM\ManyToOne(inversedBy: 'games')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Season $Season = null;
+
+    /**
+     * @var Collection<int, PlayerBoxScore>
+     */
+    #[ORM\ManyToMany(targetEntity: PlayerBoxScore::class, mappedBy: 'Game')]
+    private Collection $playerBoxScores;
+
+    #[ORM\Column(length: 100)]
+    private ?string $sourceId = null;
+
+    public function __construct()
+    {
+        $this->playerBoxScores = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getSeasonId(): ?int
-    {
-        return $this->seasonId;
-    }
-
-    public function setSeasonId(int $seasonId): static
-    {
-        $this->seasonId = $seasonId;
-
-        return $this;
     }
 
     public function getDate(): ?\DateTimeInterface
@@ -55,26 +62,77 @@ class Game
         return $this;
     }
 
-    public function getHomeTeamId(): ?int
+    public function getHomeTeam(): ?Team
     {
-        return $this->homeTeamId;
+        return $this->HomeTeam;
     }
 
-    public function setHomeTeamId(int $homeTeamId): static
+    public function setHomeTeam(?Team $HomeTeam): static
     {
-        $this->homeTeamId = $homeTeamId;
+        $this->HomeTeam = $HomeTeam;
 
         return $this;
     }
 
-    public function getAwayTeamId(): ?int
+    public function getAwayTeam(): ?Team
     {
-        return $this->awayTeamId;
+        return $this->AwayTeam;
     }
 
-    public function setAwayTeamId(int $awayTeamId): static
+    public function setAwayTeam(?Team $AwayTeam): static
     {
-        $this->awayTeamId = $awayTeamId;
+        $this->AwayTeam = $AwayTeam;
+
+        return $this;
+    }
+
+    public function getSeason(): ?Season
+    {
+        return $this->Season;
+    }
+
+    public function setSeason(?Season $Season): static
+    {
+        $this->Season = $Season;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PlayerBoxScore>
+     */
+    public function getPlayerBoxScores(): Collection
+    {
+        return $this->playerBoxScores;
+    }
+
+    public function addPlayerBoxScore(PlayerBoxScore $playerBoxScore): static
+    {
+        if (!$this->playerBoxScores->contains($playerBoxScore)) {
+            $this->playerBoxScores->add($playerBoxScore);
+            $playerBoxScore->addGame($this);
+        }
+
+        return $this;
+    }
+
+    public function removePlayerBoxScore(PlayerBoxScore $playerBoxScore): static
+    {
+        if ($this->playerBoxScores->removeElement($playerBoxScore)) {
+            $playerBoxScore->removeGame($this);
+        }
+
+        return $this;
+    }
+
+    public function getSourceId(): ?string
+    {
+        return $this->sourceId;
+    }
+
+    public function setSourceId(string $sourceId): static
+    {
+        $this->sourceId = $sourceId;
 
         return $this;
     }
